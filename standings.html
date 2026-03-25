@@ -15,18 +15,20 @@
       --accent-hover: #2563eb;
       --text: #e2e8f0;
       --muted: #64748b;
-      --rangers: #1a3a6b;
-      --liverpool: #c8102e;
-      --lakers: #552583;
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
     body {
       background: var(--bg);
       color: var(--text);
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
       padding: 24px;
+      min-height: 100vh;
     }
 
     .page-wrap {
@@ -38,18 +40,61 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
+      gap: 16px;
       margin-bottom: 20px;
       border-bottom: 1px solid var(--border);
       padding-bottom: 20px;
       flex-wrap: wrap;
     }
 
-    h1 span { color: var(--accent); }
+    .brand-block h1 {
+      font-size: 1.7rem;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+
+    .brand-block h1 span {
+      color: var(--accent);
+    }
+
+    .brand-block p {
+      margin-top: 6px;
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    #last-updated {
+      font-size: 0.82rem;
+      color: var(--muted);
+    }
+
+    .refresh-btn {
+      background: var(--accent);
+      border: none;
+      color: #fff;
+      padding: 8px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.82rem;
+      font-weight: 600;
+    }
+
+    .refresh-btn:hover {
+      background: var(--accent-hover);
+    }
 
     .top-nav {
       display: flex;
       gap: 10px;
       margin-bottom: 28px;
+      flex-wrap: wrap;
     }
 
     .nav-link {
@@ -65,6 +110,7 @@
     .nav-link.active {
       background: var(--accent);
       border-color: var(--accent);
+      color: #fff;
     }
 
     .section-title {
@@ -77,60 +123,77 @@
 
     .news-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
       gap: 16px;
     }
 
     .news-card {
       background: var(--card);
       border: 1px solid var(--border);
-      border-radius: 10px;
+      border-radius: 12px;
       overflow: hidden;
       display: flex;
       flex-direction: column;
+      min-height: 100%;
     }
 
     .news-img {
       width: 100%;
-      height: 160px;
+      height: 180px;
       object-fit: cover;
-      background: #000;
+      background: #111;
+      display: block;
     }
 
     .news-body {
-      padding: 12px;
+      padding: 14px;
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 8px;
     }
 
     .news-title {
-      font-size: 0.9rem;
-      font-weight: 600;
-      line-height: 1.3;
-    }
-
-    .news-title a {
+      font-size: 0.95rem;
+      font-weight: 700;
+      line-height: 1.35;
       color: var(--text);
-      text-decoration: none;
     }
 
-    .news-title a:hover {
-      color: var(--accent);
+    .news-desc {
+      font-size: 0.84rem;
+      line-height: 1.5;
+      color: #c8d2df;
     }
 
     .news-meta {
       font-size: 0.75rem;
       color: var(--muted);
+      margin-top: 2px;
     }
 
-    .loading, .error {
+    .news-source {
+      display: inline-block;
+      font-size: 0.7rem;
+      color: var(--accent);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      margin-bottom: 2px;
+    }
+
+    .loading,
+    .error,
+    .empty {
       text-align: center;
-      padding: 20px;
+      padding: 24px;
+      font-size: 0.88rem;
       color: var(--muted);
+      grid-column: 1 / -1;
     }
 
-    .error { color: #ef4444; }
+    .error {
+      color: #ef4444;
+    }
 
     footer {
       text-align: center;
@@ -140,100 +203,171 @@
       border-top: 1px solid var(--border);
       padding-top: 20px;
     }
+
+    @media (max-width: 768px) {
+      body {
+        padding: 16px;
+      }
+
+      .brand-block h1 {
+        font-size: 1.45rem;
+      }
+
+      .news-grid {
+        grid-template-columns: 1fr;
+      }
+    }
   </style>
 </head>
 
 <body>
-<div class="page-wrap">
-
-<header>
-  <h1>Sport <span>tracker</span></h1>
-</header>
-
-<nav class="top-nav">
-  <a class="nav-link" href="index.html">Overview</a>
-  <a class="nav-link active" href="standings.html">News</a>
-  <a class="nav-link" href="fixtures.html">Fixtures</a>
-</nav>
-
-<div class="section-title">Latest Sports News</div>
-
-<div id="news-grid" class="news-grid">
-  <div class="loading">Loading news...</div>
-</div>
-
-<footer>
-</footer>
-
-</div>
-
-<script>
-const ESPN = 'https://site.api.espn.com/apis/site/v2/sports';
-
-const SOURCES = [
-  { sport: 'soccer', league: 'eng.1' },
-  { sport: 'soccer', league: 'sco.1' },
-  { sport: 'basketball', league: 'nba' }
-];
-
-async function fetchJSON(url) {
-  const r = await fetch(url);
-  if (!r.ok) throw new Error('error');
-  return r.json();
-}
-
-function timeAgo(dateStr) {
-  const d = new Date(dateStr);
-  const diff = (Date.now() - d) / 1000;
-
-  if (diff < 3600) return Math.round(diff/60) + 'm ago';
-  if (diff < 86400) return Math.round(diff/3600) + 'h ago';
-  return d.toLocaleDateString();
-}
-
-async function loadNews() {
-  const grid = document.getElementById('news-grid');
-  let items = [];
-
-  await Promise.allSettled(SOURCES.map(async s => {
-    try {
-      const data = await fetchJSON(`${ESPN}/${s.sport}/${s.league}/news`);
-      const articles = data.articles || [];
-
-      for (const a of articles.slice(0, 5)) {
-        items.push({
-          title: a.headline,
-          url: a.links?.web?.href,
-          img: a.images?.[0]?.url,
-          time: a.published
-        });
-      }
-    } catch(e){}
-  }));
-
-  if (!items.length) {
-    grid.innerHTML = '<div class="error">No news available</div>';
-    return;
-  }
-
-  items.sort((a,b) => new Date(b.time) - new Date(a.time));
-
-  grid.innerHTML = items.slice(0, 15).map(n => `
-    <div class="news-card">
-      ${n.img ? `<img class="news-img" src="${n.img}">` : ''}
-      <div class="news-body">
-        <div class="news-title">
-          <a href="${n.url}" target="_blank">${n.title}</a>
-        </div>
-        <div class="news-meta">${timeAgo(n.time)}</div>
+  <div class="page-wrap">
+    <header>
+      <div class="brand-block">
+        <h1>Sport <span>tracker</span></h1>
+        <p>Latest sports news</p>
       </div>
+
+      <div class="header-actions">
+        <span id="last-updated">Loading...</span>
+        <button class="refresh-btn" onclick="loadNews()">↻ Refresh</button>
+      </div>
+    </header>
+
+    <nav class="top-nav">
+      <a class="nav-link" href="index.html">Overview</a>
+      <a class="nav-link active" href="standings.html">News</a>
+      <a class="nav-link" href="fixtures.html">Fixtures</a>
+    </nav>
+
+    <div class="section-title">Latest Sports News</div>
+
+    <div id="news-grid" class="news-grid">
+      <div class="loading">Loading news...</div>
     </div>
-  `).join('');
-}
 
-loadNews();
-setInterval(loadNews, 5 * 60 * 1000);
-</script>
+    <footer>
+      Data from ESPN · Auto-refreshes every 5 minutes
+    </footer>
+  </div>
 
+  <script>
+    const ESPN = 'https://site.api.espn.com/apis/site/v2/sports';
+
+    const SOURCES = [
+      { sport: 'soccer', league: 'eng.1', label: 'Premier League' },
+      { sport: 'soccer', league: 'sco.1', label: 'Scottish Premiership' },
+      { sport: 'basketball', league: 'nba', label: 'NBA' }
+    ];
+
+    async function fetchJSON(url) {
+      const r = await fetch(url);
+      if (!r.ok) {
+        throw new Error(`HTTP ${r.status}`);
+      }
+      return r.json();
+    }
+
+    function timeAgo(dateStr) {
+      if (!dateStr) return '';
+      const d = new Date(dateStr);
+      const diff = (Date.now() - d.getTime()) / 1000;
+
+      if (diff < 3600) return Math.max(1, Math.round(diff / 60)) + 'm ago';
+      if (diff < 86400) return Math.round(diff / 3600) + 'h ago';
+      return d.toLocaleDateString('en-GB', {
+        day: 'numeric',
+        month: 'short'
+      });
+    }
+
+    function cleanText(text, fallback = '') {
+      if (!text) return fallback;
+      return String(text).trim();
+    }
+
+    function getArticleDescription(article) {
+      return (
+        cleanText(article.description) ||
+        cleanText(article.story) ||
+        cleanText(article.summary) ||
+        cleanText(article.headlines?.[0]?.description) ||
+        'No additional description available.'
+      );
+    }
+
+    function getArticleImage(article) {
+      if (article.images && article.images.length) {
+        const best = article.images.find(img => img.url) || article.images[0];
+        return best?.url || '';
+      }
+      return '';
+    }
+
+    async function loadNews() {
+      const grid = document.getElementById('news-grid');
+      const updated = document.getElementById('last-updated');
+
+      grid.innerHTML = '<div class="loading">Loading news...</div>';
+      updated.textContent = 'Refreshing...';
+
+      let items = [];
+      const seenTitles = new Set();
+
+      await Promise.allSettled(SOURCES.map(async source => {
+        try {
+          const data = await fetchJSON(`${ESPN}/${source.sport}/${source.league}/news`);
+          const articles = data.articles || [];
+
+          for (const article of articles.slice(0, 12)) {
+            const title = cleanText(article.headline);
+            if (!title) continue;
+
+            const normalizedTitle = title.toLowerCase();
+            if (seenTitles.has(normalizedTitle)) continue;
+            seenTitles.add(normalizedTitle);
+
+            items.push({
+              title,
+              description: getArticleDescription(article),
+              img: getArticleImage(article),
+              time: article.published,
+              label: source.label
+            });
+          }
+        } catch (e) {
+        }
+      }));
+
+      items.sort((a, b) => new Date(b.time || 0) - new Date(a.time || 0));
+
+      if (!items.length) {
+        grid.innerHTML = '<div class="error">No news available</div>';
+        updated.textContent = 'Update failed';
+        return;
+      }
+
+      grid.innerHTML = items.slice(0, 24).map(item => `
+        <div class="news-card">
+          ${item.img ? `<img class="news-img" src="${item.img}" alt="" onerror="this.style.display='none'">` : ''}
+          <div class="news-body">
+            <div class="news-source">${item.label}</div>
+            <div class="news-title">${item.title}</div>
+            <div class="news-desc">${item.description}</div>
+            <div class="news-meta">${timeAgo(item.time)}</div>
+          </div>
+        </div>
+      `).join('');
+
+      updated.textContent =
+        'Updated ' + new Date().toLocaleTimeString('en-GB', {
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+    }
+
+    loadNews();
+    setInterval(loadNews, 5 * 60 * 1000);
+  </script>
 </body>
 </html>
