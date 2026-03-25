@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sport tracker - Standings</title>
+  <style>
+    :root {
+      --bg: #0d0f14;
+      --surface: #161a24;
+      --card: #1e2330;
+      --border: #2a3045;
+      --accent: #3b82f6;
+      --accent-hover: #2563eb;
+      --green: #22c55e;
+      --red: #ef4444;
+      --yellow: #f59e0b;
+      --text: #e2e8f0;
+      --muted: #64748b;
+      --rangers: #1a3a6b;
+      --liverpool: #c8102e;
+      --lakers: #552583;
+      --gold: #f9a01b;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      min-height: 100vh;
+      padding: 24px;
+    }
+
+    .page-wrap {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 20px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--border);
+      flex-wrap: wrap;
+    }
+
+    .brand-block h1 {
+      font-size: 1.7rem;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+
+    .brand-block h1 span {
+      color: var(--accent);
+    }
+
+    .brand-block p {
+      margin-top: 6px;
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    #last-updated {
+      font-size: 0.82rem;
+      color: var(--muted);
+    }
+
+    .refresh-btn {
+      background: var(--accent);
+      border: none;
+      color: #fff;
+      padding: 8px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.82rem;
+      font-weight: 600;
+    }
+
+    .refresh-btn:hover {
+      background: var(--accent-hover);
+    }
+
+    .top-nav {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 28px;
+      flex-wrap: wrap;
+    }
+
+    .nav-link {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 40px;
+      padding: 0 16px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 600;
+      transition: 0.15s ease;
+    }
+
+    .nav-link:hover {
+      border-color: var(--accent);
+      color: #fff;
+    }
+
+    .nav-link.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+
+    .section-title {
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 16px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .section-title .badge {
+      background: var(--accent);
+      color: #fff;
+      font-size: 0.65rem;
+      padding: 2px 7px;
+      border-radius: 10px;
+      font-weight: 600;
+    }
+
+    .standings-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+      gap: 20px;
+      margin-bottom: 32px;
+    }
+
+    .league-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+      min-width: 0;
+    }
+
+    .league-header {
+      padding: 16px 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .league-header h2 {
+      font-size: 1.05rem;
+      font-weight: 700;
+    }
+
+    .league-sub {
+      font-size: 0.75rem;
+      color: rgba(255,255,255,0.8);
+      margin-top: 3px;
+    }
+
+    .league-rangers {
+      background: linear-gradient(135deg, var(--rangers), #0d2448);
+    }
+
+    .league-liverpool {
+      background: linear-gradient(135deg, var(--liverpool), #8b0000);
+    }
+
+    .league-lakers {
+      background: linear-gradient(135deg, var(--lakers), rgba(249,160,27,0.15));
+      border-top: 3px solid var(--gold);
+    }
+
+    .focus-chip {
+      white-space: nowrap;
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.12);
+      color: #fff;
+      border: 1px solid rgba(255,255,255,0.14);
+    }
+
+    .table-wrap {
+      width: 100%;
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 560px;
+    }
+
+    th, td {
+      padding: 11px 12px;
+      border-bottom: 1px solid var(--border);
+      text-align: left;
+      font-size: 0.84rem;
+      white-space: nowrap;
+    }
+
+    th {
+      font-size: 0.72rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      background: rgba(255,255,255,0.02);
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+
+    tr:hover td {
+      background: rgba(255,255,255,0.02);
+    }
+
+    .rank {
+      width: 44px;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .team-cell {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 180px;
+    }
+
+    .team-logo {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      object-fit: contain;
+      background: rgba(255,255,255,0.08);
+      padding: 2px;
+      flex: 0 0 auto;
+    }
+
+    .team-name {
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .focus-row td {
+      background: rgba(59, 130, 246, 0.08);
+    }
+
+    .focus-row:hover td {
+      background: rgba(59, 130, 246, 0.12);
+    }
+
+    .focus-row .team-name {
+      color: #fff;
+    }
+
+    .mini-form {
+      display: flex;
+      gap: 5px;
+      align-items: center;
+    }
+
+    .form-dot {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.62rem;
+      font-weight: 700;
+      flex: 0 0 auto;
+    }
+
+    .form-dot.W {
+      background: var(--green);
+      color: #03140a;
+    }
+
+    .form-dot.L {
+      background: var(--red);
+      color: #fff;
+    }
+
+    .form-dot.D {
+      background: var(--yellow);
+      color: #221700;
+    }
+
+    .league-footer {
+      padding: 14px 18px;
+      color: var(--muted);
+      font-size: 0.78rem;
+    }
+
+    .loading,
+    .error,
+    .empty {
+      padding: 24px 18px;
+      font-size: 0.86rem;
+      text-align: center;
+    }
+
+    .loading {
+      color: var(--muted);
+    }
+
+    .error {
+      color: var(--red);
+    }
+
+    .empty {
+      color: var(--muted);
+    }
+
+    footer {
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.75rem;
+      margin-top: 32px;
+      padding-top: 20px;
+      border-top: 1px solid var(--border);
+    }
+
+    @media (max-width: 768px) {
+      body {
+        padding: 16px;
+      }
+
+      .brand-block h1 {
+        font-size: 1.45rem;
+      }
+
+      .standings-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page-wrap">
+    <header>
+      <div class="brand-block">
+        <h1>Sport <span>tracker</span></h1>
+        <p>League tables and team positions</p>
+      </div>
+
+      <div class="header-actions">
+        <span id="last-updated">Loading...</span>
+        <button class="refresh-btn" onclick="loadAllStandings()">↻ Refresh</button>
+      </div>
+    </header>
+
+    <nav class="top-nav">
+      <a class="nav-link" href="index.html">Overview</a>
+      <a class="nav-link active" href="standings.html">Standings</a>
+      <a class="nav-link" href="fixtures.html">Fixtures</a>
+    </nav>
+
+    <div class="section-title">
+      📊 League Standings <span class="badge">Live Data</span>
+    </div>
+
+    <div class="standings-grid">
+      <div class="league-card">
+        <div class="league-header league-rangers">
+          <div>
+            <h2>Scottish Premiership</h2>
+            <div class="league-sub">Rangers focus</div>
+          </div>
+          <div class="focus-chip">Rangers FC</div>
+        </div>
+        <div id="rangers-standings" class="loading">Loading Scottish Premiership table...</div>
+      </div>
+
+      <div class="league-card">
+        <div class="league-header league-liverpool">
+          <div>
+            <h2>Premier League</h2>
+            <div class="league-sub">Liverpool focus</div>
+          </div>
+          <div class="focus-chip">Liverpool FC</div>
+        </div>
+        <div id="liverpool-standings" class="loading">Loading Premier League table...</div>
+      </div>
+
+      <div class="league-card">
+        <div class="league-header league-lakers">
+          <div>
+            <h2>NBA</h2>
+            <div class="league-sub">Los Angeles Lakers focus</div>
+          </div>
+          <div class="focus-chip">LA Lakers</div>
+        </div>
+        <div id="lakers-standings" class="loading">Loading NBA table...</div>
+      </div>
+    </div>
+
+    <footer>
+      Data from ESPN · Auto-refreshes every 5 minutes
+    </footer>
+  </div>
+
+  <script>
+    const ESPN = 'https://site.api.espn.com/apis/site/v2/sports';
+
+    const STANDINGS_CONFIG = {
+      rangers: {
+        sport: 'soccer',
+        league: 'sco.1',
+        teamId: '376',
+        teamName: 'Rangers',
+        elementId: 'rangers-standings',
+        maxRows: 12
+      },
+      liverpool: {
+        sport: 'soccer',
+        league: 'eng.1',
+        teamId: '364',
+        teamName: 'Liverpool',
+        elementId: 'liverpool-standings',
+        maxRows: 12
+      },
+      lakers: {
+        sport: 'basketball',
+        league: 'nba',
+        teamId: '13',
+        teamName: 'Lakers',
+        elementId: 'lakers-standings',
+        maxRows: 15
+      }
+    };
+
+    async function fetchJSON(url) {
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+      return response.json();
+    }
+
+    function safeValue(value, fallback = '-') {
+      if (value === undefined || value === null || value === '') {
+        return fallback;
+      }
+      return value;
+    }
+
+    function getStatDisplay(entry, keys) {
+      const stats = entry?.stats || [];
+      for (const key of keys) {
+        const found = stats.find(stat =>
+          stat.abbreviation === key ||
+          stat.name === key ||
+          stat.displayName === key
+        );
+        if (found) {
+          return found.displayValue ?? found.value ?? '-';
+        }
+      }
+      return '-';
+    }
+
+    function getLogo(entry) {
+      return entry?.team?.logos?.[0]?.href || '';
+    }
+
+    function getTeamName(entry) {
+      return entry?.team?.shortDisplayName ||
+             entry?.team?.displayName ||
+             entry?.team?.name ||
+             'Unknown';
+    }
+
+    function buildFormDots(value) {
+      if (!value || value === '-') {
+        return '<span style="color: var(--muted);">-</span>';
+      }
+
+      const chars = String(value)
+        .replace(/\s+/g, '')
+        .split('')
+        .filter(ch => ['W', 'L', 'D'].includes(ch.toUpperCase()))
+        .slice(0, 5);
+
+      if (chars.length === 0) {
+        return '<span style="color: var(--muted);">-</span>';
+      }
+
+      return `
+        <div class="mini-form">
+          ${chars.map(ch => `<span class="form-dot ${ch.toUpperCase()}">${ch.toUpperCase()}</span>`).join('')}
+        </div>
+      `;
+    }
+
+    function buildSoccerTable(entries, focusTeamId, maxRows) {
+      const limited = entries.slice(0, maxRows);
+
+      return `
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th class="rank">#</th>
+                <th>Team</th>
+                <th>P</th>
+                <th>W</th>
+                <th>D</th>
+                <th>L</th>
+                <th>GD</th>
+                <th>Pts</th>
+                <th>Form</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${limited.map(entry => {
+                const isFocus = entry.team?.id === focusTeamId;
+                const rank = getStatDisplay(entry, ['rank', 'RK']);
+                const played = getStatDisplay(entry, ['gamesPlayed', 'GP']);
+                const wins = getStatDisplay(entry, ['wins', 'W']);
+                const draws = getStatDisplay(entry, ['draws', 'D']);
+                const losses = getStatDisplay(entry, ['losses', 'L']);
+                const diff = getStatDisplay(entry, ['pointDifferential', 'DIFF']);
+                const points = getStatDisplay(entry, ['points', 'PTS']);
+                const form = getStatDisplay(entry, ['lastFive', 'form', 'Last Five']);
+
+                return `
+                  <tr class="${isFocus ? 'focus-row' : ''}">
+                    <td class="rank">${safeValue(rank)}</td>
+                    <td>
+                      <div class="team-cell">
+                        <img class="team-logo" src="${getLogo(entry)}" alt="${getTeamName(entry)}" onerror="this.style.display='none'">
+                        <span class="team-name">${getTeamName(entry)}</span>
+                      </div>
+                    </td>
+                    <td>${safeValue(played)}</td>
+                    <td>${safeValue(wins)}</td>
+                    <td>${safeValue(draws)}</td>
+                    <td>${safeValue(losses)}</td>
+                    <td>${safeValue(diff)}</td>
+                    <td><strong>${safeValue(points)}</strong></td>
+                    <td>${buildFormDots(form)}</td>
+                  </tr>
+                `;
+              }).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    function buildBasketballTable(entries, focusTeamId, maxRows) {
+      const limited = entries.slice(0, maxRows);
+
+      return `
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th class="rank">#</th>
+                <th>Team</th>
+                <th>GP</th>
+                <th>W</th>
+                <th>L</th>
+                <th>PCT</th>
+                <th>GB</th>
+                <th>STRK</th>
+                <th>Form</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${limited.map(entry => {
+                const isFocus = entry.team?.id === focusTeamId;
+                const rank = getStatDisplay(entry, ['rank', 'RK']);
+                const games = getStatDisplay(entry, ['gamesPlayed', 'GP']);
+                const wins = getStatDisplay(entry, ['wins', 'W']);
+                const losses = getStatDisplay(entry, ['losses', 'L']);
+                const pct = getStatDisplay(entry, ['winPercent', 'PCT']);
+                const gb = getStatDisplay(entry, ['gamesBack', 'GB']);
+                const streak = getStatDisplay(entry, ['streak', 'STRK']);
+                const form = getStatDisplay(entry, ['lastTen', 'Last Ten']);
+
+                const formText = form && form !== '-' ? `<span>${form}</span>` : '<span style="color: var(--muted);">-</span>';
+
+                return `
+                  <tr class="${isFocus ? 'focus-row' : ''}">
+                    <td class="rank">${safeValue(rank)}</td>
+                    <td>
+                      <div class="team-cell">
+                        <img class="team-logo" src="${getLogo(entry)}" alt="${getTeamName(entry)}" onerror="this.style.display='none'">
+                        <span class="team-name">${getTeamName(entry)}</span>
+                      </div>
+                    </td>
+                    <td>${safeValue(games)}</td>
+                    <td>${safeValue(wins)}</td>
+                    <td>${safeValue(losses)}</td>
+                    <td>${safeValue(pct)}</td>
+                    <td>${safeValue(gb)}</td>
+                    <td>${safeValue(streak)}</td>
+                    <td>${formText}</td>
+                  </tr>
+                `;
+              }).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    function getStandingsEntries(data) {
+      if (Array.isArray(data?.standings?.entries) && data.standings.entries.length) {
+        return data.standings.entries;
+      }
+
+      if (Array.isArray(data?.children) && data.children.length) {
+        for (const child of data.children) {
+          if (Array.isArray(child?.standings?.entries) && child.standings.entries.length) {
+            return child.standings.entries;
+          }
+        }
+      }
+
+      return [];
+    }
+
+    async function loadLeagueStandings(configKey) {
+      const config = STANDINGS_CONFIG[configKey];
+      const container = document.getElementById(config.elementId);
+
+      try {
+        const data = await fetchJSON(`${ESPN}/${config.sport}/${config.league}/standings`);
+        const entries = getStandingsEntries(data);
+
+        if (!entries.length) {
+          container.innerHTML = '<div class="empty">No standings data available.</div>';
+          return;
+        }
+
+        let tableHtml = '';
+        if (config.sport === 'soccer') {
+          tableHtml = buildSoccerTable(entries, config.teamId, config.maxRows);
+        } else {
+          tableHtml = buildBasketballTable(entries, config.teamId, config.maxRows);
+        }
+
+        const focusEntry = entries.find(entry => entry.team?.id === config.teamId);
+        let footerText = 'Live standings from ESPN.';
+        if (focusEntry) {
+          const rank = getStatDisplay(focusEntry, ['rank', 'RK']);
+          footerText = `${config.teamName} current position: #${safeValue(rank)}`;
+        }
+
+        container.innerHTML = `
+          ${tableHtml}
+          <div class="league-footer">${footerText}</div>
+        `;
+      } catch (error) {
+        container.innerHTML = `<div class="error">Could not load standings: ${error.message}</div>`;
+      }
+    }
+
+    async function loadAllStandings() {
+      document.getElementById('last-updated').textContent = 'Refreshing...';
+
+      await Promise.all([
+        loadLeagueStandings('rangers'),
+        loadLeagueStandings('liverpool'),
+        loadLeagueStandings('lakers')
+      ]);
+
+      document.getElementById('last-updated').textContent =
+        'Updated ' + new Date().toLocaleTimeString('en-GB', {
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+    }
+
+    loadAllStandings();
+    setInterval(loadAllStandings, 5 * 60 * 1000);
+  </script>
+</body>
+</html>
